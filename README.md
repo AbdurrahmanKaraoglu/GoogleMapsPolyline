@@ -22,20 +22,20 @@ dependencies:
   flutter:
     sdk: flutter
   google_maps_flutter: ^2.0.10
-  google_maps_polyline: ^1.0.2
+  google_maps_polyline: ^1.0.3
 ```
 
 3. İşte bir örnek kod:
 
 ```dart
 import 'package:flutter/material.dart';
-import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:google_maps_polyline/google_maps_polyline.dart';
 // ignore: implementation_imports
-import 'package:flutter_polyline_points/src/point_latlng.dart';
+import 'package:google_maps_polyline/src/point_latlng.dart';
 // ignore: implementation_imports
-import 'package:flutter_polyline_points/src/utils/my_request_enums.dart';
+import 'package:google_maps_polyline/src/utils/my_request_enums.dart';
 // ignore: implementation_imports
-import 'package:flutter_polyline_points/src/utils/result_polyline.dart';
+import 'package:google_maps_polyline/src/utils/result_polyline.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 void main() {
@@ -71,7 +71,7 @@ class _MapScreenState extends State<MapScreen> {
 
   void drawPolyline() async {
     // PolylinePointsFlutter sınıfını oluşturun
-    PolylinePointsFlutter polylinePoints = PolylinePointsFlutter();
+    GoogleMapsPolyline polylinePoints = GoogleMapsPolyline();
 
     // Kendi Google API anahtarınız ile değiştirin
     String googleApiKey = "SİZİN_GOOGLE_API_ANAHTARINIZ";
@@ -123,6 +123,7 @@ class _MapScreenState extends State<MapScreen> {
   }
 }
 
+
 ```
 
 Bu örnekte, `PolylinePointsFlutter` sınıfı kullanılarak bir poliline çizilmektedir. `getRouteBetweenCoordinates` fonksiyonu, Google Yönlendirme API'sini kullanarak iki koordinat arasındaki rotayı alır.
@@ -159,20 +160,20 @@ dependencies:
   flutter:
     sdk: flutter
   google_maps_flutter: ^2.0.10
-  google_maps_polyline: ^1.0.2
+  google_maps_polyline: ^1.0.3
 ```
 
 3. Here's an example code:
 
 ```dart
 import 'package:flutter/material.dart';
-import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:google_maps_polyline/google_maps_polyline.dart';
 // ignore: implementation_imports
-import 'package:flutter_polyline_points/src/point_latlng.dart';
+import 'package:google_maps_polyline/src/point_latlng.dart';
 // ignore: implementation_imports
-import 'package:flutter_polyline_points/src/utils/my_request_enums.dart';
+import 'package:google_maps_polyline/src/utils/my_request_enums.dart';
 // ignore: implementation_imports
-import 'package:flutter_polyline_points/src/utils/result_polyline.dart';
+import 'package:google_maps_polyline/src/utils/result_polyline.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 void main() {
@@ -208,7 +209,7 @@ class _MapScreenState extends State<MapScreen> {
 
   void drawPolyline() async {
     // PolylinePointsFlutter sınıfını oluşturun
-    PolylinePointsFlutter polylinePoints = PolylinePointsFlutter();
+    GoogleMapsPolyline polylinePoints = GoogleMapsPolyline();
 
     // Kendi Google API anahtarınız ile değiştirin
     String googleApiKey = "SİZİN_GOOGLE_API_ANAHTARINIZ";
