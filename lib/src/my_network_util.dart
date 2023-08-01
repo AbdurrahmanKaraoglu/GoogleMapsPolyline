@@ -132,7 +132,7 @@ class MyNetworkUtil {
       lat += getCoordinate();
       lng += getCoordinate();
 
-      // coordinates.add([lat / accuracyMultiplier, lng / accuracyMultiplier]);
+      /// coordinates.add([lat / accuracyMultiplier, lng / accuracyMultiplier]);
       coordinates.add(MyPointLatLng(lat / accuracyMultiplier, lng / accuracyMultiplier));
     }
 

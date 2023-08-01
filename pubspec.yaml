@@ -1,6 +1,6 @@
 name: google_maps_polyline
-description: Polyline Points Flutter, haritalarda polilinelerle çalışmak için kullanılan bir Flutter paketidir. (Polyline Points Flutter is a Flutter package that provides utilities for working with polylines on maps.)
-version: 1.0.1
+description: Polyline Points Flutter, haritalarda polilinelerle çalışmak için kullanılan bir Flutter paketidir.
+version: 1.0.2
 homepage: "https://github.com/AbdurrahmanKaraoglu/GoogleMapsPolyline.git"
 repository: "https://github.com/AbdurrahmanKaraoglu/GoogleMapsPolyline.git"
 issue_tracker: "https://github.com/AbdurrahmanKaraoglu/GoogleMapsPolyline/issues"

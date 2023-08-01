@@ -1,6 +1,6 @@
 # Polyline Points Flutter
 
-[![pub package](https://img.shields.io/pub/v/polyline_points_flutter.svg)](https://pub.dev/packages/polyline_points_flutter)
+[![pub package](https://img.shields.io/pub/v/google_maps_polyline.svg)](https://pub.dev/packages/google_maps_polyline)
 
 Polyline Points Flutter, haritalarda polilinelerle çalışmak için kullanılan bir Flutter paketidir. Bu paket, Google Polilinelerini çözme ve kodlama işlemleri yapmanıza, ayrıca Google Yönlendirme API'sini kullanarak koordinatlar arasında rota almanıza olanak sağlar.
 
@@ -15,14 +15,14 @@ dependencies:
   google_maps_flutter: ^2.0.10
 ```
 
-2. Ardından, projenize `polyline_points_flutter` paketini ekleyin. `pubspec.yaml` dosyasını aşağıdaki gibi düzenleyin ve paketi projenize ekleyin:
+2. Ardından, projenize `google_maps_polyline` paketini ekleyin. `pubspec.yaml` dosyasını aşağıdaki gibi düzenleyin ve paketi projenize ekleyin:
 
 ```yaml
 dependencies:
   flutter:
     sdk: flutter
   google_maps_flutter: ^2.0.10
-  polyline_points_flutter: ^1.0.1
+  google_maps_polyline: ^1.0.2
 ```
 
 3. İşte bir örnek kod:
@@ -133,11 +133,11 @@ Bu kadar! Artık Flutter projenizde Polyline Points Flutter paketini kullanabili
 
 ## Lisans
 
-Bu proje MIT Lisansı altında lisanslanmıştır. Daha fazla bilgi için [LICENSE](https://pub.dev/packages/polyline_points_flutter/license) dosyasını inceleyebilirsiniz.
+Bu proje MIT Lisansı altında lisanslanmıştır. Daha fazla bilgi için [LICENSE](https://pub.dev/packages/google_maps_polyline/license) dosyasını inceleyebilirsiniz.
 
 # Polyline Points Flutter
 
-[![pub package](https://img.shields.io/pub/v/polyline_points_flutter.svg)](https://pub.dev/packages/polyline_points_flutter)
+[![pub package](https://img.shields.io/pub/v/google_maps_polyline.svg)](https://pub.dev/packages/google_maps_polyline)
 
 Polyline Points Flutter is a Flutter package that provides utilities for working with polylines on maps. This package allows you to decode and encode Google Polylines, and get routes between coordinates using the Google Directions API.
 
@@ -152,14 +152,14 @@ dependencies:
   google_maps_flutter: ^2.0.10
 ```
 
-2. Next, add the `polyline_points_flutter` package to your project. Edit the `pubspec.yaml` file as follows and add the package to your project:
+2. Next, add the `google_maps_polyline` package to your project. Edit the `pubspec.yaml` file as follows and add the package to your project:
 
 ```yaml
 dependencies:
   flutter:
     sdk: flutter
   google_maps_flutter: ^2.0.10
-  polyline_points_flutter: ^1.0.1
+  google_maps_polyline: ^1.0.2
 ```
 
 3. Here's an example code:
@@ -270,4 +270,4 @@ That's it! You can now use the Polyline Points Flutter package in your Flutter p
 
 ## License
 
-This project is licensed under the MIT License. For more information, see the [LICENSE](https://pub.dev/packages/polyline_points_flutter/license) file.
+This project is licensed under the MIT License. For more information, see the [LICENSE](https://pub.dev/packages/google_maps_polyline/license) file.
