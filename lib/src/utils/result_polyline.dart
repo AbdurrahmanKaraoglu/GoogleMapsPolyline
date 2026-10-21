@@ -1,27 +1,27 @@
-// result_polyline.dart
 import 'package:google_maps_polyline/src/point_latlng.dart';
 
-/// ResultPolyline sınıfı, Google Yönlendirme API'sinden dönen sonuç polyline'ini temsil eder.
+/// Result of a Directions API route request.
 class ResultPolyline {
-  /// Ağ, zaman aşımı veya yanıt ayrıştırma hatalarında kullanılan durum değeri.
+  /// Status used for network, timeout and response parsing failures.
   static const String statusError = "error";
 
-  /// İstek durumu.
+  /// Request status.
   ///
-  /// Directions API'nin döndürdüğü değerdir (`OK`, `ZERO_RESULTS`,
+  /// The value returned by the Directions API (`OK`, `ZERO_RESULTS`,
   /// `NOT_FOUND`, `OVER_QUERY_LIMIT`, `REQUEST_DENIED`, `INVALID_REQUEST`,
   /// `MAX_WAYPOINTS_EXCEEDED`, `MAX_ROUTE_LENGTH_EXCEEDED`, `UNKNOWN_ERROR`).
-  /// İstek API'ye ulaşamadıysa veya yanıt okunamadıysa [statusError] olur.
+  /// [statusError] if the request did not reach the API or the response could
+  /// not be read.
   String? status;
 
-  /// Çözümlenmiş koordinat listesi.
+  /// Decoded route points.
   List<MyPointLatLng> points;
 
-  /// Hata mesajı (eğer varsa).
+  /// Error message, if any. The API key is never included.
   String? errorMessage;
 
   ResultPolyline({this.status, this.points = const [], this.errorMessage = ""});
 
-  /// Rota başarıyla alındıysa `true`.
+  /// `true` if a route was returned.
   bool get isSuccess => status == "OK";
 }

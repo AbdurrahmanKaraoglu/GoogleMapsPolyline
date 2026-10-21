@@ -154,6 +154,7 @@ void main() {
     expect(result.status, ResultPolyline.statusError);
     expect(result.errorMessage, contains('Bağlantı kurulamadı'));
     expect(result.errorMessage, isNot(contains(_apiKey)));
+    expect(result.errorMessage, isNot(contains('maps.googleapis.com')));
   });
 
   test('zaman aşımında hata döner', () async {
@@ -163,7 +164,42 @@ void main() {
     );
     final result = await api.getRouteBetweenCoordinates(_apiKey, _origin, _destination);
     expect(result.status, ResultPolyline.statusError);
-    expect(result.errorMessage, contains('yanıtlanmadı'));
+    expect(result.errorMessage, 'The request did not complete within 50 ms.');
+  });
+
+  group('language', () {
+    test('varsayılan dil İngilizce, istekte language=en gider', () async {
+      final api = polylineWith((_) async => _json({'status': 'ZERO_RESULTS'}));
+      final result = await api.getRouteBetweenCoordinates(_apiKey, _origin, _destination);
+      expect(lastUri.queryParameters['language'], 'en');
+      expect(result.errorMessage, 'No route could be found between the origin and destination.');
+    });
+
+    test('tr seçilince mesajlar Türkçe, istekte language=tr gider', () async {
+      final api = GoogleMapsPolyline(
+        language: 'tr',
+        client: MockClient((request) async {
+          lastUri = request.url;
+          return _json({'status': 'ZERO_RESULTS'});
+        }),
+      );
+      final result = await api.getRouteBetweenCoordinates(_apiKey, _origin, _destination);
+      expect(lastUri.queryParameters['language'], 'tr');
+      expect(result.errorMessage, 'Başlangıç ve hedef arasında rota bulunamadı.');
+    });
+
+    test('desteklenmeyen dil isteğe iletilir, paket mesajları İngilizce olur', () async {
+      final api = GoogleMapsPolyline(
+        language: 'de',
+        client: MockClient((request) async {
+          lastUri = request.url;
+          return http.Response('oops', 500);
+        }),
+      );
+      final result = await api.getRouteBetweenCoordinates(_apiKey, _origin, _destination);
+      expect(lastUri.queryParameters['language'], 'de');
+      expect(result.errorMessage, 'HTTP error 500.');
+    });
   });
   group('detailedPolyline', () {
     // İki adım ortak bir noktada birleşir: (38.5,-120.2)->(40.7,-120.95) ve (40.7,-120.95)->(43.252,-126.453).

@@ -1,10 +1,9 @@
-/// point_latlng.dart
-/// MyPointLatLng sınıfı, enlem ve boylamı temsil eder.
+/// A geographic point in degrees.
 class MyPointLatLng {
-  /// Enlem değeri (latitude) derece cinsinden.
+  /// Latitude in degrees.
   final double latitude;
 
-  /// Boylam değeri (longitude) derece cinsinden.
+  /// Longitude in degrees.
   final double longitude;
 
   const MyPointLatLng(this.latitude, this.longitude);
@@ -17,7 +16,5 @@ class MyPointLatLng {
   int get hashCode => Object.hash(latitude, longitude);
 
   @override
-  String toString() {
-    return "enlem: $latitude / boylam: $longitude";
-  }
+  String toString() => "MyPointLatLng($latitude, $longitude)";
 }

@@ -1,5 +1,5 @@
-/// Google Directions API ile rota alma ve Google kodlanmış polyline
-/// dizelerini çözme/kodlama.
+/// Fetch routes from the Google Directions API and decode/encode Google
+/// encoded polylines.
 library;
 
 import 'package:google_maps_polyline/src/my_network_util.dart';
@@ -16,32 +16,34 @@ export 'package:google_maps_polyline/src/utils/my_request_enums.dart';
 export 'package:google_maps_polyline/src/utils/result_polyline.dart';
 export 'package:google_maps_polyline/src/utils/waypoint_polyline.dart';
 
-/// GoogleMapsPolyline sınıfı, polinleri çözme ve kodlama işlemleri için bir arayüz sağlar.
+/// Entry point for fetching routes and decoding/encoding polylines.
 class GoogleMapsPolyline {
-  /// Ağ isteklerini yürüten yardımcı.
+  /// Helper that performs the network requests.
   final MyNetworkUtil util;
 
-  /// [client] verilirse istekler bu istemciyle yapılır (test veya özel
-  /// yapılandırma için); kapatmak çağıranın sorumluluğundadır.
-  /// [timeout] tek bir isteğin en fazla süresidir.
-  GoogleMapsPolyline({http.Client? client, Duration timeout = const Duration(seconds: 15)})
-      : util = MyNetworkUtil(client: client, timeout: timeout);
-
-  /// İki nokta arasındaki rota için Google Yönlendirme API'sini kullanarak sonuç polyline'ini alır.
-  /// Parametreler:
-  /// - googleApiKey: Google Yönlendirme API'si için API anahtarı.
-  /// - origin: Başlangıç noktası için enlem ve boylam bilgisi.
-  /// - destination: Hedef noktası için enlem ve boylam bilgisi.
-  /// - travelMode: Rota için kullanılacak seyahat modu (varsayılan: driving).
-  /// - wayPoints: Yol üzerindeki diğer noktalar için WayPointPolyline listesi (varsayılan: boş liste).
-  /// - avoidHighways: Otoyolları kullanmayı engellemek için boolean değeri (varsayılan: false).
-  /// - avoidTolls: Ücretli yolları kullanmayı engellemek için boolean değeri (varsayılan: false).
-  /// - avoidFerries: Feribot geçişlerini engellemek için boolean değeri (varsayılan: true).
-  /// - optimizeWaypoints: Yol üzerindeki noktaların optimizasyonu için boolean değeri (varsayılan: false).
-  /// - detailedPolyline: `true` ise sadeleştirilmiş `overview_polyline` yerine adım adım ayrıntılı
-  ///   rota döndürülür (varsayılan: false).
+  /// If [client] is given, requests use it (for tests or custom
+  /// configuration) and the caller is responsible for closing it.
+  /// [timeout] is the maximum duration of a single request.
   ///
-  /// Hata durumunda istisna fırlatmaz; [ResultPolyline.isSuccess] `false` olur.
+  /// [language] is sent to the Directions API (so its own `error_message`
+  /// comes back in that language) and selects the language of the package's
+  /// messages: `tr` gives Turkish, anything else English.
+  GoogleMapsPolyline({http.Client? client, Duration timeout = const Duration(seconds: 15), String language = 'en'})
+      : util = MyNetworkUtil(client: client, timeout: timeout, language: language);
+
+  /// Fetches the route between [origin] and [destination] from the Google
+  /// Directions API.
+  ///
+  /// - [googleApiKey]: API key with access to the Directions API.
+  /// - [travelMode]: travel mode (default: driving).
+  /// - [wayPoints]: intermediate points (default: none).
+  /// - [avoidHighways], [avoidTolls], [avoidFerries]: route restrictions
+  ///   (defaults: false, false, true).
+  /// - [optimizeWaypoints]: let the API reorder the waypoints (default: false).
+  /// - [detailedPolyline]: return the step-by-step route instead of the
+  ///   simplified `overview_polyline` (default: false).
+  ///
+  /// Never throws; on failure [ResultPolyline.isSuccess] is `false`.
   Future<ResultPolyline> getRouteBetweenCoordinates(
       String googleApiKey, MyPointLatLng origin, MyPointLatLng destination,
       {MyTravelMode travelMode = MyTravelMode.driving,
@@ -56,15 +58,14 @@ class GoogleMapsPolyline {
         detailedPolyline: detailedPolyline);
   }
 
-  /// Google polyline'i çözer ve çözümlenmiş koordinatları içeren bir liste döndürür.
-  /// Örnek bir encoded polyline: "_p~iF~ps|U_ulLnnqC_mqNvxq`@"
+  /// Decodes a Google encoded polyline, e.g. "_p~iF~ps|U_ulLnnqC_mqNvxq`@".
   ///
-  /// Geçersiz dizede [FormatException] fırlatır.
+  /// Throws [FormatException] for invalid input.
   List<MyPointLatLng> decodePolyline(String encodedString, {int precision = 5}) {
     return PolylineCodec.decode(encodedString, precision: precision);
   }
 
-  /// Koordinat listesini Google polyline dizesine kodlar.
+  /// Encodes a list of points as a Google encoded polyline.
   String encodePolyline(List<MyPointLatLng> points, {int precision = 5}) {
     return PolylineCodec.encode(points, precision: precision);
   }

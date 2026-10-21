@@ -9,9 +9,12 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   google_maps_flutter: ^2.19.0
   google_maps_polyline:
     path: ..
+  intl: any
 
 dev_dependencies:
   flutter_test:
@@ -20,3 +23,4 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  generate: true

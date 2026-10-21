@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:google_maps_polyline/src/messages.dart';
 import 'package:google_maps_polyline/src/point_latlng.dart';
 import 'package:google_maps_polyline/src/polyline_codec.dart';
 import 'package:google_maps_polyline/src/utils/my_request_enums.dart';
@@ -8,38 +9,33 @@ import 'package:google_maps_polyline/src/utils/result_polyline.dart';
 import 'package:google_maps_polyline/src/utils/waypoint_polyline.dart';
 import 'package:http/http.dart' as http;
 
-/// Google Directions API ile iletişimi yürütür.
+/// Talks to the Google Directions API.
 class MyNetworkUtil {
-  /// Dışarıdan verilen HTTP istemcisi. `null` ise her istek için geçici bir
-  /// istemci oluşturulur ve istek bitince kapatılır.
+  /// HTTP client supplied by the caller. When `null`, a temporary client is
+  /// created for each request and closed afterwards.
   final http.Client? client;
 
-  /// İsteğin en fazla ne kadar süreceği.
+  /// Maximum duration of a single request.
   final Duration timeout;
 
-  MyNetworkUtil({this.client, this.timeout = const Duration(seconds: 15)});
+  /// Language code sent to the API as `language` and used for the package's
+  /// own messages (`tr` gives Turkish, anything else English).
+  final String language;
 
-  static const Map<String, String> _statusMessages = {
-    "ZERO_RESULTS": "Başlangıç ve hedef arasında rota bulunamadı.",
-    "NOT_FOUND": "Başlangıç, hedef veya ara noktalardan en az biri bulunamadı.",
-    "OVER_QUERY_LIMIT": "API kotası aşıldı.",
-    "OVER_DAILY_LIMIT": "Günlük API kotası aşıldı veya faturalandırma etkin değil.",
-    "REQUEST_DENIED": "İstek reddedildi; API anahtarını ve Directions API yetkisini kontrol edin.",
-    "INVALID_REQUEST": "Geçersiz istek.",
-    "MAX_WAYPOINTS_EXCEEDED": "Ara nokta sayısı sınırı aşıldı.",
-    "MAX_ROUTE_LENGTH_EXCEEDED": "Rota çok uzun.",
-    "UNKNOWN_ERROR": "Sunucu hatası; istek tekrar denenebilir.",
-  };
+  final PolylineMessages _messages;
 
-  /// Google Directions API'den iki nokta arasındaki rotayı alır.
+  MyNetworkUtil({this.client, this.timeout = const Duration(seconds: 15), this.language = 'en'})
+      : _messages = PolylineMessages.forLanguage(language);
+
+  /// Fetches the route between two points from the Google Directions API.
   ///
-  /// Hata durumunda istisna fırlatmaz; [ResultPolyline.status] ve
-  /// [ResultPolyline.errorMessage] doldurulur. API anahtarı hata
-  /// mesajlarında asla yer almaz.
+  /// Never throws; on failure [ResultPolyline.status] and
+  /// [ResultPolyline.errorMessage] are filled in. The API key never appears in
+  /// error messages.
   ///
-  /// [detailedPolyline] `true` ise rota, Google'ın sadeleştirdiği
-  /// `overview_polyline` yerine her adımın (`legs[].steps[].polyline`)
-  /// birleştirilmesiyle oluşturulur; yakın zoom'da yolu daha iyi izler.
+  /// When [detailedPolyline] is `true`, the route is built by joining every
+  /// step polyline (`legs[].steps[].polyline`) instead of the simplified
+  /// `overview_polyline`, so it follows the road closely at high zoom.
   Future<ResultPolyline> getRouteBetweenCoordinates(
       String googleApiKey,
       MyPointLatLng origin,
@@ -52,8 +48,7 @@ class MyNetworkUtil {
       bool optimizeWaypoints,
       {bool detailedPolyline = false}) async {
     if (!_isFinite(origin) || !_isFinite(destination)) {
-      return ResultPolyline(
-          status: ResultPolyline.statusError, errorMessage: "Başlangıç ve hedef koordinatları sonlu sayılar olmalı.");
+      return ResultPolyline(status: ResultPolyline.statusError, errorMessage: _messages.invalidCoordinates);
     }
     final uri = buildUri(googleApiKey, origin, destination, travelMode, wayPoints, avoidHighways, avoidTolls,
         avoidFerries, optimizeWaypoints);
@@ -63,10 +58,14 @@ class MyNetworkUtil {
     try {
       response = await activeClient.get(uri).timeout(timeout);
     } on TimeoutException {
+      return ResultPolyline(status: ResultPolyline.statusError, errorMessage: _messages.timeout(timeout));
+    } on http.ClientException catch (e) {
+      // `toString` also contains the request URL; only the message is kept.
       return ResultPolyline(
-          status: ResultPolyline.statusError, errorMessage: "İstek ${timeout.inSeconds} saniye içinde yanıtlanmadı.");
+          status: ResultPolyline.statusError, errorMessage: _redact(_messages.network(e.message), googleApiKey));
     } on Exception catch (e) {
-      return ResultPolyline(status: ResultPolyline.statusError, errorMessage: _redact("Ağ hatası: $e", googleApiKey));
+      return ResultPolyline(
+          status: ResultPolyline.statusError, errorMessage: _redact(_messages.network("$e"), googleApiKey));
     } finally {
       if (client == null) activeClient.close();
     }
@@ -80,36 +79,34 @@ class MyNetworkUtil {
       return ResultPolyline(
           status: ResultPolyline.statusError,
           errorMessage:
-              response.statusCode == 200 ? "Directions API yanıtı okunamadı." : "HTTP ${response.statusCode} hatası.");
+              response.statusCode == 200 ? _messages.unreadableResponse : _messages.http(response.statusCode));
     }
 
     final status = body["status"] is String ? body["status"] as String : null;
     if (response.statusCode != 200 && status == null) {
-      return ResultPolyline(status: ResultPolyline.statusError, errorMessage: "HTTP ${response.statusCode} hatası.");
+      return ResultPolyline(status: ResultPolyline.statusError, errorMessage: _messages.http(response.statusCode));
     }
 
     if (status == "OK") {
       try {
         final points = _routePoints(body["routes"], detailedPolyline);
         if (points == null) {
-          return ResultPolyline(status: "ZERO_RESULTS", errorMessage: _statusMessages["ZERO_RESULTS"]);
+          return ResultPolyline(status: "ZERO_RESULTS", errorMessage: _messages.status("ZERO_RESULTS"));
         }
         return ResultPolyline(status: status, points: points);
       } on FormatException catch (e) {
-        return ResultPolyline(status: ResultPolyline.statusError, errorMessage: "Polyline çözülemedi: ${e.message}");
+        return ResultPolyline(status: ResultPolyline.statusError, errorMessage: _messages.polyline(e.message));
       }
     }
 
     final apiMessage = body["error_message"] is String ? body["error_message"] as String : null;
     return ResultPolyline(
         status: status ?? ResultPolyline.statusError,
-        errorMessage:
-            _redact(apiMessage ?? _statusMessages[status] ?? "Bilinmeyen yanıt durumu: $status", googleApiKey));
+        errorMessage: _redact(apiMessage ?? _messages.status(status) ?? _messages.unknownStatus(status), googleApiKey));
   }
 
-  /// Directions API istek adresini oluşturur. Tüm değerler `Uri` tarafından
-  /// kodlanır. Sonlu olmayan (NaN, sonsuz) koordinatlarda [ArgumentError]
-  /// fırlatır.
+  /// Builds the Directions API request URL. All values are encoded by [Uri].
+  /// Throws [ArgumentError] for non-finite (NaN, infinite) coordinates.
   Uri buildUri(
       String googleApiKey,
       MyPointLatLng origin,
@@ -120,8 +117,8 @@ class MyNetworkUtil {
       bool avoidTolls,
       bool avoidFerries,
       bool optimizeWaypoints) {
-    if (!_isFinite(origin)) throw ArgumentError.value(origin, 'origin', 'Sonlu olmayan koordinat');
-    if (!_isFinite(destination)) throw ArgumentError.value(destination, 'destination', 'Sonlu olmayan koordinat');
+    if (!_isFinite(origin)) throw ArgumentError.value(origin, 'origin', 'Non-finite coordinate');
+    if (!_isFinite(destination)) throw ArgumentError.value(destination, 'destination', 'Non-finite coordinate');
     final avoid = [
       if (avoidHighways) "highways",
       if (avoidTolls) "tolls",
@@ -134,15 +131,16 @@ class MyNetworkUtil {
       if (avoid.isNotEmpty) "avoid": avoid.join('|'),
       if (wayPoints.isNotEmpty)
         "waypoints": [if (optimizeWaypoints) "optimize:true", ...wayPoints.map((p) => p.toString())].join('|'),
+      if (language.isNotEmpty) "language": language,
       "key": googleApiKey,
     };
     return Uri.https("maps.googleapis.com", "maps/api/directions/json", params);
   }
 
-  /// Koordinatı API'nin beklediği `enlem,boylam` biçimine çevirir.
+  /// Formats a point as the `lat,lng` string the API expects.
   ///
-  /// `double.toString` küçük değerleri `1e-7` gibi üstel yazar ve API bunu
-  /// reddeder; bu yüzden en fazla 7 ondalık basamakla sabit gösterim kullanılır.
+  /// `double.toString` writes small values in exponent form such as `1e-7`,
+  /// which the API rejects, so fixed notation with at most 7 decimals is used.
   static String formatLatLng(MyPointLatLng point) =>
       "${_formatDegrees(point.latitude)},${_formatDegrees(point.longitude)}";
 
@@ -154,9 +152,9 @@ class MyNetworkUtil {
 
   static bool _isFinite(MyPointLatLng p) => p.latitude.isFinite && p.longitude.isFinite;
 
-  /// İlk rotanın noktalarını döndürür; rota yoksa `null`.
-  /// [detailed] ise adım polylinelerini birleştirir, adımlar okunamazsa
-  /// `overview_polyline`'a döner.
+  /// Returns the points of the first route, or `null` if there is none.
+  /// When [detailed], joins the step polylines and falls back to
+  /// `overview_polyline` if the steps cannot be read.
   static List<MyPointLatLng>? _routePoints(Object? routes, bool detailed) {
     if (routes is! List || routes.isEmpty) return null;
     final route = routes.first;
@@ -168,7 +166,7 @@ class MyNetworkUtil {
         final points = <MyPointLatLng>[];
         for (final encoded in stepPolylines) {
           final stepPoints = PolylineCodec.decode(encoded);
-          // Ardışık adımlar ortak bir noktada birleşir; tekrarı atla.
+          // Consecutive steps share their joining point; skip the duplicate.
           final skipFirst = points.isNotEmpty && stepPoints.isNotEmpty && stepPoints.first == points.last;
           points.addAll(skipFirst ? stepPoints.skip(1) : stepPoints);
         }

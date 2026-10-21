@@ -2,18 +2,19 @@ import 'dart:math' as math show pow;
 
 import 'package:google_maps_polyline/src/point_latlng.dart';
 
-/// Google "Encoded Polyline Algorithm Format" için çözücü ve kodlayıcı.
+/// Decoder and encoder for Google's Encoded Polyline Algorithm Format.
 ///
-/// Bkz. https://developers.google.com/maps/documentation/utilities/polylinealgorithm
+/// See https://developers.google.com/maps/documentation/utilities/polylinealgorithm
 class PolylineCodec {
   PolylineCodec._();
 
-  /// Kodlanmış polyline dizesini koordinat listesine çözer.
+  /// Decodes an encoded polyline into a list of points.
   ///
-  /// [precision] ondalık basamak sayısıdır: Google Directions/Routes API için 5,
-  /// bazı servisler (ör. OSRM `polyline6`) için 6.
+  /// [precision] is the number of decimal places: 5 for the Google
+  /// Directions/Routes APIs, 6 for some services (e.g. OSRM `polyline6`).
   ///
-  /// Dize eksik veya geçersiz karakter içeriyorsa [FormatException] fırlatır.
+  /// Throws [FormatException] if the string is truncated or contains invalid
+  /// characters.
   static List<MyPointLatLng> decode(String encoded, {int precision = 5}) {
     _checkPrecision(precision);
     final factor = math.pow(10, precision);
@@ -28,20 +29,20 @@ class PolylineCodec {
       int chunk;
       do {
         if (index >= encoded.length) {
-          throw FormatException('Polyline beklenmedik şekilde bitti', encoded, index);
+          throw FormatException('Unexpected end of polyline', encoded, index);
         }
         if (shift > 30) {
-          throw FormatException('Polyline değeri çok büyük', encoded, index);
+          throw FormatException('Polyline value is too large', encoded, index);
         }
         chunk = encoded.codeUnitAt(index) - 63;
         if (chunk < 0 || chunk > 63) {
-          throw FormatException('Geçersiz polyline karakteri', encoded, index);
+          throw FormatException('Invalid polyline character', encoded, index);
         }
         index++;
         result |= (chunk & 0x1f) << shift;
         shift += 5;
       } while (chunk >= 0x20);
-      // En düşük bit işareti taşır: 1 ise değer negatiftir ve tersine çevrilir.
+      // The lowest bit carries the sign: if set, the value is negative and inverted.
       return (result & 1) != 0 ? ~(result >> 1) : result >> 1;
     }
 
@@ -53,7 +54,7 @@ class PolylineCodec {
     return points;
   }
 
-  /// Koordinat listesini kodlanmış polyline dizesine dönüştürür.
+  /// Encodes a list of points as a polyline string.
   static String encode(List<MyPointLatLng> points, {int precision = 5}) {
     _checkPrecision(precision);
     final factor = math.pow(10, precision);

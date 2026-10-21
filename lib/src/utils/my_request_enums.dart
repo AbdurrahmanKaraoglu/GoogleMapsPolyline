@@ -1,3 +1,2 @@
-/// my_request_enums.dart
-/// MyTravelMode enum, rota çizme için kullanılacak seyahat modlarını temsil eder.
+/// Travel mode used when requesting a route.
 enum MyTravelMode { driving, bicycling, transit, walking }

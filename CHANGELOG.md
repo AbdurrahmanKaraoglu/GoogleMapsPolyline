@@ -1,3 +1,13 @@
+## 2.2.0
+
+* **Language support:** new `language` parameter on `GoogleMapsPolyline` (default `en`). It is sent to the Directions API as `language` and selects the language of the package's own messages (`tr` → Turkish, anything else → English).
+* **Behaviour change:** package messages are now English by default (previously Turkish). Pass `language: 'tr'` to keep Turkish messages. `status` values are unchanged.
+* Network error messages no longer include the request URL.
+* Timeout messages show milliseconds for sub-second timeouts.
+* `MyPointLatLng.toString()` now returns `MyPointLatLng(lat, lng)`.
+* API documentation is now in English; README is English first with a Turkish section.
+* Example app: modern corporate design, English/Turkish localization following the device language, Maps SDK key read from `local.properties`, Windows Kotlin build fix.
+
 ## 2.1.0
 
 * `detailedPolyline` seçeneği: rota, sadeleştirilmiş `overview_polyline` yerine adım (`legs[].steps[].polyline`) polylineleri birleştirilerek oluşturulabiliyor; adımlar arasındaki ortak nokta tekrarlanmıyor.

@@ -1,10 +1,10 @@
-/// WayPointPolyline sınıfı, rota üzerindeki ara noktayı temsil eder.
+/// An intermediate point on a route.
 class WayPointPolyline {
-  /// Ara noktanın konumu: `"enlem,boylam"`, adres veya `place_id:...`.
+  /// Location of the waypoint: `"lat,lng"`, an address or `place_id:...`.
   String location;
 
-  /// `false` ise nokta durak olarak değil, yalnızca geçiş noktası (`via:`)
-  /// olarak kullanılır.
+  /// When `false`, the route passes through the point without stopping
+  /// (sent with the `via:` prefix).
   bool stopOver;
 
   WayPointPolyline({required this.location, this.stopOver = true});
