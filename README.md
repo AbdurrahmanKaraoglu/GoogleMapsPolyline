@@ -1,274 +1,118 @@
-# Polyline Points Flutter
+# google_maps_polyline
 
 [![pub package](https://img.shields.io/pub/v/google_maps_polyline.svg)](https://pub.dev/packages/google_maps_polyline)
 
-Polyline Points Flutter, haritalarda polilinelerle çalışmak için kullanılan bir Flutter paketidir. Bu paket, Google Polilinelerini çözme ve kodlama işlemleri yapmanıza, ayrıca Google Yönlendirme API'sini kullanarak koordinatlar arasında rota almanıza olanak sağlar.
+Google Directions API ile iki nokta arasındaki rotayı alır ve Google
+[kodlanmış polyline](https://developers.google.com/maps/documentation/utilities/polylinealgorithm)
+dizelerini çözer/kodlar. Saf Dart'tır: Flutter (Android, iOS, web, masaüstü) ve sunucu tarafında çalışır.
 
-## Kullanım
+*English summary below.*
 
-1. İlk olarak, projenize `google_maps_flutter` paketini ekleyin. `pubspec.yaml` dosyasını aşağıdaki gibi düzenleyin:
-
-```yaml
-dependencies:
-  flutter:
-    sdk: flutter
-  google_maps_flutter: ^2.0.10
-```
-
-2. Ardından, projenize `google_maps_polyline` paketini ekleyin. `pubspec.yaml` dosyasını aşağıdaki gibi düzenleyin ve paketi projenize ekleyin:
+## Kurulum
 
 ```yaml
 dependencies:
-  flutter:
-    sdk: flutter
-  google_maps_flutter: ^2.0.10
-  google_maps_polyline: ^1.0.3
+  google_maps_polyline: ^2.0.0
 ```
 
-3. İşte bir örnek kod:
+## Rota alma
 
 ```dart
-import 'package:flutter/material.dart';
 import 'package:google_maps_polyline/google_maps_polyline.dart';
-// ignore: implementation_imports
-import 'package:google_maps_polyline/src/point_latlng.dart';
-// ignore: implementation_imports
-import 'package:google_maps_polyline/src/utils/my_request_enums.dart';
-// ignore: implementation_imports
-import 'package:google_maps_polyline/src/utils/result_polyline.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-void main() {
-  runApp(const MyApp());
+final polyline = GoogleMapsPolyline();
+
+final result = await polyline.getRouteBetweenCoordinates(
+  apiKey,
+  const MyPointLatLng(41.0082, 28.9784), // İstanbul
+  const MyPointLatLng(39.9334, 32.8597), // Ankara
+  travelMode: MyTravelMode.driving,
+  wayPoints: [
+    WayPointPolyline(location: 'Bolu, Türkiye'),
+    WayPointPolyline(location: '40.7,31.6', stopOver: false), // via:
+  ],
+  avoidTolls: true,
+);
+
+if (result.isSuccess) {
+  // google_maps_flutter ile:
+  final points = [for (final p in result.points) LatLng(p.latitude, p.longitude)];
+} else {
+  print('${result.status}: ${result.errorMessage}');
 }
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: MapScreen(),
-    );
-  }
-}
-
-class MapScreen extends StatefulWidget {
-  const MapScreen({super.key});
-
-  @override
-  State<MapScreen> createState() => _MapScreenState();
-}
-
-class _MapScreenState extends State<MapScreen> {
-  Set<Polyline> polylines = {};
-
-  @override
-  void initState() {
-    super.initState();
-    drawPolyline();
-  }
-
-  void drawPolyline() async {
-    // PolylinePointsFlutter sınıfını oluşturun
-    GoogleMapsPolyline polylinePoints = GoogleMapsPolyline();
-
-    // Kendi Google API anahtarınız ile değiştirin
-    String googleApiKey = "SİZİN_GOOGLE_API_ANAHTARINIZ";
-
-    // Başlangıç ve hedef koordinatları belirleyin
-    MyPointLatLng origin = MyPointLatLng(37.7749, -122.4194); // San Francisco
-    MyPointLatLng destination = MyPointLatLng(34.0522, -118.2437); // Los Angeles
-
-    // Rota için API'ya istek gönderin ve sonuç polyline'ini alın
-    ResultPolyline result = await polylinePoints.getRouteBetweenCoordinates(
-      googleApiKey,
-      origin,
-      destination,
-      travelMode: MyTravelMode.driving,
-    );
-
-    // Başarılı bir şekilde bir rota alındıysa, poliline çizmek için kullanılacak LatLng listesi oluşturun
-    if (result.status == "ok" && result.points.isNotEmpty) {
-      List<LatLng> polylineCoordinates = [];
-      for (var point in result.points) {
-        polylineCoordinates.add(LatLng(point.latitude!, point.longitude!));
-      }
-
-      // Poliline'ı çizin ve polylines kümesine ekleyin
-      polylines.add(Polyline(
-        polylineId: const PolylineId("polylineIdString"),
-        points: polylineCoordinates,
-        color: Colors.blue,
-        width: 5,
-      ));
-      setState(() {});
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Polyline Points Flutter Demo"),
-      ),
-      body: GoogleMap(
-        initialCameraPosition: const CameraPosition(
-          target: LatLng(37.7749, -122.4194), // San Francisco
-          zoom: 10,
-        ),
-        polylines: polylines,
-      ),
-    );
-  }
-}
-
-
 ```
 
-Bu örnekte, `PolylinePointsFlutter` sınıfı kullanılarak bir poliline çizilmektedir. `getRouteBetweenCoordinates` fonksiyonu, Google Yönlendirme API'sini kullanarak iki koordinat arasındaki rotayı alır.
+`getRouteBetweenCoordinates` istisna fırlatmaz. `result.status` Directions API'nin döndürdüğü değerdir
+(`OK`, `ZERO_RESULTS`, `NOT_FOUND`, `OVER_QUERY_LIMIT`, `REQUEST_DENIED`, `INVALID_REQUEST`, …);
+ağ hatası, zaman aşımı veya okunamayan yanıtta `ResultPolyline.statusError` (`"error"`) olur.
+Hata mesajlarında API anahtarı maskelenir.
+
+İsteğe bağlı ayarlar:
+
+```dart
+GoogleMapsPolyline(
+  client: myHttpClient,                 // kendi http.Client'ınız (test, proxy vb.)
+  timeout: const Duration(seconds: 10), // varsayılan 15 sn
+);
+```
+
+## Polyline çözme ve kodlama
+
+```dart
+final points = PolylineCodec.decode(r'_p~iF~ps|U_ulLnnqC_mqNvxq`@');
+// [(38.5, -120.2), (40.7, -120.95), (43.252, -126.453)]
+
+final encoded = PolylineCodec.encode(points); // '_p~iF~ps|U_ulLnnqC_mqNvxq`@'
+
+// 6 basamak hassasiyetli dizeler (ör. OSRM polyline6):
+PolylineCodec.decode(encoded6, precision: 6);
+```
+
+Geçersiz veya yarım kalmış dizelerde `FormatException` fırlatılır.
+
+## API anahtarı güvenliği
+
+Directions API web servisidir; anahtarı uygulamaya gömmek, uygulamayı açan herkesin onu okuyabilmesi demektir.
+Anahtarı Google Cloud Console'da **yalnızca Directions API** ile sınırlayın ve kota koyun. Mümkünse isteği kendi
+sunucunuz üzerinden yapın; paket saf Dart olduğundan sunucuda da kullanılabilir.
+
+## Directions API ve Routes API
+
+Google, Directions API'yi **Legacy** (eski) olarak işaretledi ve yeni projeler için
+[Routes API](https://developers.google.com/maps/documentation/routes)'yi öneriyor. 1 Mart 2025'ten sonra
+oluşturulan Google Cloud projelerinde Directions API etkinleştirilemeyebilir. Bu paket Directions API'yi kullanır;
+Routes API yanıtındaki `polyline.encodedPolyline` alanı da aynı biçimde olduğundan `PolylineCodec.decode` ile
+çözülebilir.
+
+## 2.0.0'a geçiş
+
+- `MyPointLatLng.latitude`/`longitude` artık `double?` değil `double` (`!` gerekmiyor).
+- Başarı kontrolü için `result.status == "ok"` yerine `result.isSuccess` kullanın
+  (API `"OK"` döndürdüğünden eski karşılaştırma hiçbir zaman doğru olmuyordu).
+- Tüm sınıflar `package:google_maps_polyline/google_maps_polyline.dart` üzerinden dışa aktarılıyor;
+  `src/...` içe aktarmalarını kaldırın.
+- Paket artık Flutter'a bağımlı değil.
 
 ---
 
-Bu kadar! Artık Flutter projenizde Polyline Points Flutter paketini kullanabilirsiniz. Haritalarda polilinelerle çalışmak için `PolylinePointsFlutter` sınıfını kullanabilirsiniz.
+## English
 
-## Lisans
+Fetches a route between two coordinates from the Google Directions API and decodes/encodes Google encoded
+polylines. Pure Dart — works in Flutter apps and on the server.
 
-Bu proje MIT Lisansı altında lisanslanmıştır. Daha fazla bilgi için [LICENSE](https://pub.dev/packages/google_maps_polyline/license) dosyasını inceleyebilirsiniz.
+- `GoogleMapsPolyline().getRouteBetweenCoordinates(apiKey, origin, destination, ...)` returns a `ResultPolyline`
+  and never throws; check `result.isSuccess`, `result.status` (the raw API status, or `"error"` for network,
+  timeout and parse failures) and `result.errorMessage` (the API key is redacted).
+- `PolylineCodec.decode(encoded, precision: 5)` / `PolylineCodec.encode(points, precision: 5)`; invalid input
+  throws `FormatException`.
+- Pass your own `http.Client` and `timeout` to the `GoogleMapsPolyline` constructor if needed.
+- The Directions API is a **legacy** Google product; new projects should consider the
+  [Routes API](https://developers.google.com/maps/documentation/routes). Its `encodedPolyline` can be decoded
+  with `PolylineCodec.decode`.
+- Restrict your API key to the Directions API, or call it from your own backend.
 
-# Polyline Points Flutter
+See [`example/`](example) for a complete Flutter app.
 
-[![pub package](https://img.shields.io/pub/v/google_maps_polyline.svg)](https://pub.dev/packages/google_maps_polyline)
+## Lisans / License
 
-Polyline Points Flutter is a Flutter package that provides utilities for working with polylines on maps. This package allows you to decode and encode Google Polylines, and get routes between coordinates using the Google Directions API.
-
-## Usage
-
-1. First, add the `google_maps_flutter` package to your project. Edit the `pubspec.yaml` file as follows:
-
-```yaml
-dependencies:
-  flutter:
-    sdk: flutter
-  google_maps_flutter: ^2.0.10
-```
-
-2. Next, add the `google_maps_polyline` package to your project. Edit the `pubspec.yaml` file as follows and add the package to your project:
-
-```yaml
-dependencies:
-  flutter:
-    sdk: flutter
-  google_maps_flutter: ^2.0.10
-  google_maps_polyline: ^1.0.3
-```
-
-3. Here's an example code:
-
-```dart
-import 'package:flutter/material.dart';
-import 'package:google_maps_polyline/google_maps_polyline.dart';
-// ignore: implementation_imports
-import 'package:google_maps_polyline/src/point_latlng.dart';
-// ignore: implementation_imports
-import 'package:google_maps_polyline/src/utils/my_request_enums.dart';
-// ignore: implementation_imports
-import 'package:google_maps_polyline/src/utils/result_polyline.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: MapScreen(),
-    );
-  }
-}
-
-class MapScreen extends StatefulWidget {
-  const MapScreen({super.key});
-
-  @override
-  State<MapScreen> createState() => _MapScreenState();
-}
-
-class _MapScreenState extends State<MapScreen> {
-  Set<Polyline> polylines = {};
-
-  @override
-  void initState() {
-    super.initState();
-    drawPolyline();
-  }
-
-  void drawPolyline() async {
-    // PolylinePointsFlutter sınıfını oluşturun
-    GoogleMapsPolyline polylinePoints = GoogleMapsPolyline();
-
-    // Kendi Google API anahtarınız ile değiştirin
-    String googleApiKey = "SİZİN_GOOGLE_API_ANAHTARINIZ";
-
-    // Başlangıç ve hedef koordinatları belirleyin
-    MyPointLatLng origin = MyPointLatLng(37.7749, -122.4194); // San Francisco
-    MyPointLatLng destination = MyPointLatLng(34.0522, -118.2437); // Los Angeles
-
-    // Rota için API'ya istek gönderin ve sonuç polyline'ini alın
-    ResultPolyline result = await polylinePoints.getRouteBetweenCoordinates(
-      googleApiKey,
-      origin,
-      destination,
-      travelMode: MyTravelMode.driving,
-    );
-
-    // Başarılı bir şekilde bir rota alındıysa, poliline çizmek için kullanılacak LatLng listesi oluşturun
-    if (result.status == "ok" && result.points.isNotEmpty) {
-      List<LatLng> polylineCoordinates = [];
-      for (var point in result.points) {
-        polylineCoordinates.add(LatLng(point.latitude!, point.longitude!));
-      }
-
-      // Poliline'ı çizin ve polylines kümesine ekleyin
-      polylines.add(Polyline(
-        polylineId: const PolylineId("polylineIdString"),
-        points: polylineCoordinates,
-        color: Colors.blue,
-        width: 5,
-      ));
-      setState(() {});
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Polyline Points Flutter Demo"),
-      ),
-      body: GoogleMap(
-        initialCameraPosition: const CameraPosition(
-          target: LatLng(37.7749, -122.4194), // San Francisco
-          zoom: 10,
-        ),
-        polylines: polylines,
-      ),
-    );
-  }
-}
-
-```
-
-In this example, the `PolylinePointsFlutter` class is used to draw a polyline on the map. The `getRouteBetweenCoordinates` function retrieves the route between two coordinates using the Google Directions API.
-
----
-
-That's it! You can now use the Polyline Points Flutter package in your Flutter project to work with polylines on maps.
-
-## License
-
-This project is licensed under the MIT License. For more information, see the [LICENSE](https://pub.dev/packages/google_maps_polyline/license) file.
+MIT — bkz. [LICENSE](LICENSE).

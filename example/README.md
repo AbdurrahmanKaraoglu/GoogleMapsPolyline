@@ -1,16 +1,12 @@
-# example
+# google_maps_polyline örneği
 
-A new Flutter project.
+İstanbul–Ankara arasındaki sürüş rotasını Directions API'den alıp `google_maps_flutter` haritasında çizer.
 
-## Getting Started
+1. Haritanın görünmesi için Maps SDK anahtarını platforma ekleyin
+   ([google_maps_flutter kurulumu](https://pub.dev/packages/google_maps_flutter#getting-started)):
+   Android'de `android/app/src/main/AndroidManifest.xml`, iOS'ta `ios/Runner/AppDelegate.swift`.
+2. Directions API anahtarını derleme sırasında verin; anahtarı koda yazmayın:
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```bash
+flutter run --dart-define=DIRECTIONS_API_KEY=ANAHTARINIZ
+```
