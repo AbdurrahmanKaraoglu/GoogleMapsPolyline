@@ -38,6 +38,8 @@ class GoogleMapsPolyline {
   /// - avoidTolls: Ücretli yolları kullanmayı engellemek için boolean değeri (varsayılan: false).
   /// - avoidFerries: Feribot geçişlerini engellemek için boolean değeri (varsayılan: true).
   /// - optimizeWaypoints: Yol üzerindeki noktaların optimizasyonu için boolean değeri (varsayılan: false).
+  /// - detailedPolyline: `true` ise sadeleştirilmiş `overview_polyline` yerine adım adım ayrıntılı
+  ///   rota döndürülür (varsayılan: false).
   ///
   /// Hata durumunda istisna fırlatmaz; [ResultPolyline.isSuccess] `false` olur.
   Future<ResultPolyline> getRouteBetweenCoordinates(
@@ -47,9 +49,11 @@ class GoogleMapsPolyline {
       bool avoidHighways = false,
       bool avoidTolls = false,
       bool avoidFerries = true,
-      bool optimizeWaypoints = false}) {
+      bool optimizeWaypoints = false,
+      bool detailedPolyline = false}) {
     return util.getRouteBetweenCoordinates(googleApiKey, origin, destination, travelMode, wayPoints, avoidHighways,
-        avoidTolls, avoidFerries, optimizeWaypoints);
+        avoidTolls, avoidFerries, optimizeWaypoints,
+        detailedPolyline: detailedPolyline);
   }
 
   /// Google polyline'i çözer ve çözümlenmiş koordinatları içeren bir liste döndürür.

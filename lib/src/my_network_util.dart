@@ -36,6 +36,10 @@ class MyNetworkUtil {
   /// Hata durumunda istisna fırlatmaz; [ResultPolyline.status] ve
   /// [ResultPolyline.errorMessage] doldurulur. API anahtarı hata
   /// mesajlarında asla yer almaz.
+  ///
+  /// [detailedPolyline] `true` ise rota, Google'ın sadeleştirdiği
+  /// `overview_polyline` yerine her adımın (`legs[].steps[].polyline`)
+  /// birleştirilmesiyle oluşturulur; yakın zoom'da yolu daha iyi izler.
   Future<ResultPolyline> getRouteBetweenCoordinates(
       String googleApiKey,
       MyPointLatLng origin,
@@ -45,7 +49,12 @@ class MyNetworkUtil {
       bool avoidHighways,
       bool avoidTolls,
       bool avoidFerries,
-      bool optimizeWaypoints) async {
+      bool optimizeWaypoints,
+      {bool detailedPolyline = false}) async {
+    if (!_isFinite(origin) || !_isFinite(destination)) {
+      return ResultPolyline(
+          status: ResultPolyline.statusError, errorMessage: "Başlangıç ve hedef koordinatları sonlu sayılar olmalı.");
+    }
     final uri = buildUri(googleApiKey, origin, destination, travelMode, wayPoints, avoidHighways, avoidTolls,
         avoidFerries, optimizeWaypoints);
 
@@ -80,12 +89,12 @@ class MyNetworkUtil {
     }
 
     if (status == "OK") {
-      final encoded = _overviewPolyline(body["routes"]);
-      if (encoded == null) {
-        return ResultPolyline(status: "ZERO_RESULTS", errorMessage: _statusMessages["ZERO_RESULTS"]);
-      }
       try {
-        return ResultPolyline(status: status, points: PolylineCodec.decode(encoded));
+        final points = _routePoints(body["routes"], detailedPolyline);
+        if (points == null) {
+          return ResultPolyline(status: "ZERO_RESULTS", errorMessage: _statusMessages["ZERO_RESULTS"]);
+        }
+        return ResultPolyline(status: status, points: points);
       } on FormatException catch (e) {
         return ResultPolyline(status: ResultPolyline.statusError, errorMessage: "Polyline çözülemedi: ${e.message}");
       }
@@ -99,7 +108,8 @@ class MyNetworkUtil {
   }
 
   /// Directions API istek adresini oluşturur. Tüm değerler `Uri` tarafından
-  /// kodlanır.
+  /// kodlanır. Sonlu olmayan (NaN, sonsuz) koordinatlarda [ArgumentError]
+  /// fırlatır.
   Uri buildUri(
       String googleApiKey,
       MyPointLatLng origin,
@@ -110,14 +120,16 @@ class MyNetworkUtil {
       bool avoidTolls,
       bool avoidFerries,
       bool optimizeWaypoints) {
+    if (!_isFinite(origin)) throw ArgumentError.value(origin, 'origin', 'Sonlu olmayan koordinat');
+    if (!_isFinite(destination)) throw ArgumentError.value(destination, 'destination', 'Sonlu olmayan koordinat');
     final avoid = [
       if (avoidHighways) "highways",
       if (avoidTolls) "tolls",
       if (avoidFerries) "ferries",
     ];
     final params = <String, String>{
-      "origin": "${origin.latitude},${origin.longitude}",
-      "destination": "${destination.latitude},${destination.longitude}",
+      "origin": formatLatLng(origin),
+      "destination": formatLatLng(destination),
       "mode": travelMode.name,
       if (avoid.isNotEmpty) "avoid": avoid.join('|'),
       if (wayPoints.isNotEmpty)
@@ -127,14 +139,63 @@ class MyNetworkUtil {
     return Uri.https("maps.googleapis.com", "maps/api/directions/json", params);
   }
 
-  static String? _overviewPolyline(Object? routes) {
+  /// Koordinatı API'nin beklediği `enlem,boylam` biçimine çevirir.
+  ///
+  /// `double.toString` küçük değerleri `1e-7` gibi üstel yazar ve API bunu
+  /// reddeder; bu yüzden en fazla 7 ondalık basamakla sabit gösterim kullanılır.
+  static String formatLatLng(MyPointLatLng point) =>
+      "${_formatDegrees(point.latitude)},${_formatDegrees(point.longitude)}";
+
+  static String _formatDegrees(double value) {
+    var text = value.toStringAsFixed(7);
+    text = text.replaceFirst(RegExp(r'\.?0+$'), '');
+    return text == '-0' ? '0' : text;
+  }
+
+  static bool _isFinite(MyPointLatLng p) => p.latitude.isFinite && p.longitude.isFinite;
+
+  /// İlk rotanın noktalarını döndürür; rota yoksa `null`.
+  /// [detailed] ise adım polylinelerini birleştirir, adımlar okunamazsa
+  /// `overview_polyline`'a döner.
+  static List<MyPointLatLng>? _routePoints(Object? routes, bool detailed) {
     if (routes is! List || routes.isEmpty) return null;
     final route = routes.first;
     if (route is! Map) return null;
+
+    if (detailed) {
+      final stepPolylines = _stepPolylines(route["legs"]);
+      if (stepPolylines != null) {
+        final points = <MyPointLatLng>[];
+        for (final encoded in stepPolylines) {
+          final stepPoints = PolylineCodec.decode(encoded);
+          // Ardışık adımlar ortak bir noktada birleşir; tekrarı atla.
+          final skipFirst = points.isNotEmpty && stepPoints.isNotEmpty && stepPoints.first == points.last;
+          points.addAll(skipFirst ? stepPoints.skip(1) : stepPoints);
+        }
+        return points;
+      }
+    }
+
     final overview = route["overview_polyline"];
     if (overview is! Map) return null;
-    final points = overview["points"];
-    return points is String ? points : null;
+    final encoded = overview["points"];
+    return encoded is String ? PolylineCodec.decode(encoded) : null;
+  }
+
+  static List<String>? _stepPolylines(Object? legs) {
+    if (legs is! List || legs.isEmpty) return null;
+    final result = <String>[];
+    for (final leg in legs) {
+      final steps = leg is Map ? leg["steps"] : null;
+      if (steps is! List) return null;
+      for (final step in steps) {
+        final polyline = step is Map ? step["polyline"] : null;
+        final encoded = polyline is Map ? polyline["points"] : null;
+        if (encoded is! String) return null;
+        result.add(encoded);
+      }
+    }
+    return result.isEmpty ? null : result;
   }
 
   static String _redact(String text, String apiKey) {

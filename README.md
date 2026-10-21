@@ -4,7 +4,8 @@
 
 Google Directions API ile iki nokta arasındaki rotayı alır ve Google
 [kodlanmış polyline](https://developers.google.com/maps/documentation/utilities/polylinealgorithm)
-dizelerini çözer/kodlar. Saf Dart'tır: Flutter (Android, iOS, web, masaüstü) ve sunucu tarafında çalışır.
+dizelerini çözer/kodlar. Saf Dart'tır: Flutter (Android, iOS, masaüstü) ve sunucu tarafında çalışır.
+Polyline çözme/kodlama web'de de çalışır; rota isteği için [Flutter web notuna](#flutter-web-ve-cors) bakın.
 
 *English summary below.*
 
@@ -12,7 +13,7 @@ dizelerini çözer/kodlar. Saf Dart'tır: Flutter (Android, iOS, web, masaüstü
 
 ```yaml
 dependencies:
-  google_maps_polyline: ^2.0.0
+  google_maps_polyline: ^2.1.0
 ```
 
 ## Rota alma
@@ -32,6 +33,7 @@ final result = await polyline.getRouteBetweenCoordinates(
     WayPointPolyline(location: '40.7,31.6', stopOver: false), // via:
   ],
   avoidTolls: true,
+  detailedPolyline: true, // adım adım ayrıntılı rota
 );
 
 if (result.isSuccess) {
@@ -45,7 +47,12 @@ if (result.isSuccess) {
 `getRouteBetweenCoordinates` istisna fırlatmaz. `result.status` Directions API'nin döndürdüğü değerdir
 (`OK`, `ZERO_RESULTS`, `NOT_FOUND`, `OVER_QUERY_LIMIT`, `REQUEST_DENIED`, `INVALID_REQUEST`, …);
 ağ hatası, zaman aşımı veya okunamayan yanıtta `ResultPolyline.statusError` (`"error"`) olur.
-Hata mesajlarında API anahtarı maskelenir.
+Hata mesajlarında API anahtarı maskelenir. Başlangıç veya hedef koordinatı `NaN`/sonsuz ise istek
+atılmadan hata döner.
+
+Varsayılan olarak Google'ın sadeleştirdiği `overview_polyline` kullanılır; yakın zoom'da yoldan sapabilir.
+`detailedPolyline: true` verildiğinde rota, her adımın polylinesi birleştirilerek oluşturulur (daha çok nokta,
+yolu daha iyi izler). Yanıtta adım yoksa otomatik olarak `overview_polyline`'a dönülür.
 
 İsteğe bağlı ayarlar:
 
@@ -69,6 +76,14 @@ PolylineCodec.decode(encoded6, precision: 6);
 ```
 
 Geçersiz veya yarım kalmış dizelerde `FormatException` fırlatılır.
+
+## Flutter web ve CORS
+
+Google'ın Directions web servisi tarayıcıdan gelen isteklere CORS izni vermez. Bu yüzden Flutter web'de
+`getRouteBetweenCoordinates` her zaman ağ hatası (`status == "error"`) döndürür. Web'de rotayı kendi sunucunuzda
+(ör. bu paketi kullanan bir Dart sunucusu veya Cloud Function) alın, uygulamaya kodlanmış polyline dizesini
+gönderin ve tarayıcıda `PolylineCodec.decode` ile çözün. Web'de rota çizmek için Maps JavaScript API'nin
+`DirectionsService` sınıfı da bir seçenektir.
 
 ## API anahtarı güvenliği
 
@@ -98,13 +113,17 @@ Routes API yanıtındaki `polyline.encodedPolyline` alanı da aynı biçimde old
 ## English
 
 Fetches a route between two coordinates from the Google Directions API and decodes/encodes Google encoded
-polylines. Pure Dart — works in Flutter apps and on the server.
+polylines. Pure Dart — works in Flutter apps (Android, iOS, desktop) and on the server.
 
 - `GoogleMapsPolyline().getRouteBetweenCoordinates(apiKey, origin, destination, ...)` returns a `ResultPolyline`
   and never throws; check `result.isSuccess`, `result.status` (the raw API status, or `"error"` for network,
   timeout and parse failures) and `result.errorMessage` (the API key is redacted).
 - `PolylineCodec.decode(encoded, precision: 5)` / `PolylineCodec.encode(points, precision: 5)`; invalid input
   throws `FormatException`.
+- `detailedPolyline: true` builds the route from every step's polyline instead of the simplified
+  `overview_polyline`, so it follows the road closely at high zoom.
+- **Flutter web:** the Directions web service does not allow CORS, so route requests fail in the browser.
+  Fetch the route on your own server and decode the polyline in the browser with `PolylineCodec.decode`.
 - Pass your own `http.Client` and `timeout` to the `GoogleMapsPolyline` constructor if needed.
 - The Directions API is a **legacy** Google product; new projects should consider the
   [Routes API](https://developers.google.com/maps/documentation/routes). Its `encodedPolyline` can be decoded

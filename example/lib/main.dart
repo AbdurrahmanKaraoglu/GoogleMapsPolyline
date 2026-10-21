@@ -60,6 +60,7 @@ class _MapScreenState extends State<MapScreen> {
       _origin,
       _destination,
       travelMode: MyTravelMode.driving,
+      detailedPolyline: true,
     );
     if (!mounted) return;
 

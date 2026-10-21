@@ -1,3 +1,10 @@
+## 2.1.0
+
+* `detailedPolyline` seçeneği: rota, sadeleştirilmiş `overview_polyline` yerine adım (`legs[].steps[].polyline`) polylineleri birleştirilerek oluşturulabiliyor; adımlar arasındaki ortak nokta tekrarlanmıyor.
+* Koordinatlar isteğe sabit ondalıkla (en fazla 7 basamak) yazılıyor; sıfıra yakın değerler artık `1e-7` gibi üstel gösterimle gidip API tarafından reddedilmiyor.
+* `NaN`/sonsuz başlangıç veya hedef koordinatı istek atılmadan hata sonucu döndürüyor; `MyNetworkUtil.buildUri` bu durumda `ArgumentError` fırlatıyor.
+* README: Flutter web'de Directions API'nin CORS nedeniyle çalışmadığı ve önerilen çözüm eklendi.
+
 ## 2.0.0
 
 **Kırıcı değişiklikler**

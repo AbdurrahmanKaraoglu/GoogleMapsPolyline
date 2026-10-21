@@ -165,4 +165,77 @@ void main() {
     expect(result.status, ResultPolyline.statusError);
     expect(result.errorMessage, contains('yanıtlanmadı'));
   });
+  group('detailedPolyline', () {
+    // İki adım ortak bir noktada birleşir: (38.5,-120.2)->(40.7,-120.95) ve (40.7,-120.95)->(43.252,-126.453).
+    final step1 = PolylineCodec.encode(const [MyPointLatLng(38.5, -120.2), MyPointLatLng(40.7, -120.95)]);
+    final step2 = PolylineCodec.encode(const [MyPointLatLng(40.7, -120.95), MyPointLatLng(43.252, -126.453)]);
+    final overview = PolylineCodec.encode(const [MyPointLatLng(38.5, -120.2), MyPointLatLng(43.252, -126.453)]);
+
+    Map<String, Object> routeBody({bool withSteps = true}) => {
+          'status': 'OK',
+          'routes': [
+            {
+              'overview_polyline': {'points': overview},
+              'legs': [
+                {
+                  'steps': withSteps
+                      ? [
+                          {
+                            'polyline': {'points': step1}
+                          },
+                          {
+                            'polyline': {'points': step2}
+                          },
+                        ]
+                      : [],
+                }
+              ],
+            }
+          ],
+        };
+
+    test('varsayılan olarak overview_polyline kullanılır', () async {
+      final api = polylineWith((_) async => _json(routeBody()));
+      final result = await api.getRouteBetweenCoordinates(_apiKey, _origin, _destination);
+      expect(result.points, hasLength(2));
+    });
+
+    test('adım polylineleri birleştirilir, ortak nokta tekrarlanmaz', () async {
+      final api = polylineWith((_) async => _json(routeBody()));
+      final result = await api.getRouteBetweenCoordinates(_apiKey, _origin, _destination, detailedPolyline: true);
+      expect(result.isSuccess, isTrue);
+      expect(result.points, const [
+        MyPointLatLng(38.5, -120.2),
+        MyPointLatLng(40.7, -120.95),
+        MyPointLatLng(43.252, -126.453),
+      ]);
+    });
+
+    test('adım yoksa overview_polyline kullanılır', () async {
+      final api = polylineWith((_) async => _json(routeBody(withSteps: false)));
+      final result = await api.getRouteBetweenCoordinates(_apiKey, _origin, _destination, detailedPolyline: true);
+      expect(result.points, hasLength(2));
+    });
+  });
+
+  group('koordinat biçimi', () {
+    test('küçük değerler üstel gösterimle yazılmaz', () async {
+      final api = polylineWith((_) async => _json({'status': 'ZERO_RESULTS'}));
+      await api.getRouteBetweenCoordinates(
+          _apiKey, const MyPointLatLng(0.0000001, -0.00000004), const MyPointLatLng(-1e-7, 180));
+      expect(lastUri.queryParameters['origin'], '0.0000001,0');
+      expect(lastUri.queryParameters['destination'], '-0.0000001,180');
+    });
+
+    test('NaN/sonsuz koordinat istek atılmadan hata döner', () async {
+      var called = false;
+      final api = polylineWith((_) async {
+        called = true;
+        return _json({'status': 'OK'});
+      });
+      final result = await api.getRouteBetweenCoordinates(_apiKey, const MyPointLatLng(double.nan, 0), _destination);
+      expect(called, isFalse);
+      expect(result.status, ResultPolyline.statusError);
+    });
+  });
 }
