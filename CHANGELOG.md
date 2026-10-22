@@ -1,3 +1,8 @@
+## 2.2.2
+
+* DOCS: README lists the publisher's other packages. / README'ye yayıncının diğer paketlerinin listesi eklendi.
+* DOCS: pubspec description is now in English. / pubspec açıklaması İngilizceye çevrildi.
+
 ## 2.2.1
 
 * Directions API responses are decoded as UTF-8 even when the `Content-Type` header has no charset, so non-ASCII `error_message` texts (e.g. Turkish) are no longer garbled.

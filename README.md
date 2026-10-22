@@ -13,7 +13,7 @@ on the web; for route requests see [Flutter web and CORS](#flutter-web-and-cors)
 
 ```yaml
 dependencies:
-  google_maps_polyline: ^2.2.1
+  google_maps_polyline: ^2.2.2
 ```
 
 ## Fetching a route
@@ -139,6 +139,22 @@ API's `polyline.encodedPolyline` uses the same format and can be decoded with `P
 See [`example/`](example) for a complete Flutter app (English and Turkish). Without a `DIRECTIONS_API_KEY` it runs
 in demo mode: bundled sample polylines are decoded offline with `PolylineCodec` and drawn in a route preview.
 
+## Other packages
+
+More packages by the same publisher:
+
+- [marker_crafter](https://pub.dev/packages/marker_crafter): Custom Google Maps markers drawn with Canvas
+- [animated_route_marker](https://pub.dev/packages/animated_route_marker): Smoothly animated map marker along a route or live GPS
+- [advanced_background_locator](https://pub.dev/packages/advanced_background_locator): Background location tracking plugin (Android/iOS)
+- [advanced_geofence](https://pub.dev/packages/advanced_geofence): Pure Dart geofencing engine: enter, exit and dwell events
+- [route_simulator](https://pub.dev/packages/route_simulator): Realistic fake GPS streams for testing and demos
+- [background_doctor](https://pub.dev/packages/background_doctor): Diagnoses why background work stops on Android and why the app was killed
+- [scan_tally](https://pub.dev/packages/scan_tally): Continuous barcode scanning for stock counts: dedupe, tally, feedback, GS1
+- [scan_tally_mobile_scanner](https://pub.dev/packages/scan_tally_mobile_scanner): mobile_scanner camera adapter for scan_tally
+- [turkish_kit](https://pub.dev/packages/turkish_kit): Turkish validators, money in words, casing, provinces, holidays (pure Dart)
+- [turkish_kit_flutter](https://pub.dev/packages/turkish_kit_flutter): Flutter widgets for turkish_kit: Turkish money field and input formatters
+- [flutter_toastify](https://pub.dev/packages/flutter_toastify): Animated toast notifications
+
 ---
 
 ## Türkçe
@@ -167,6 +183,22 @@ Saf Dart'tır; Flutter (Android, iOS, masaüstü) ve sunucu tarafında çalış�
   ikonları çizer.
 - **Örnek uygulama:** `DIRECTIONS_API_KEY` verilmezse demo modunda açılır; örnek polyline'lar çevrimdışı çözülüp
   rota önizlemesinde çizilir.
+
+### Diğer paketler
+
+Aynı yayıncının diğer paketleri:
+
+- [marker_crafter](https://pub.dev/packages/marker_crafter): Canvas ile çizilen özel Google Maps işaretçileri
+- [animated_route_marker](https://pub.dev/packages/animated_route_marker): Rota ya da canlı GPS üzerinde akıcı hareket eden harita işaretçisi
+- [advanced_background_locator](https://pub.dev/packages/advanced_background_locator): Arka planda konum takibi eklentisi (Android/iOS)
+- [advanced_geofence](https://pub.dev/packages/advanced_geofence): Saf Dart geofence motoru: giriş, çıkış ve bekleme olayları
+- [route_simulator](https://pub.dev/packages/route_simulator): Test ve demo için gerçekçi sahte GPS akışı
+- [background_doctor](https://pub.dev/packages/background_doctor): Android'de arka plan işinin neden durduğunu ve uygulamanın neden kapandığını teşhis eder
+- [scan_tally](https://pub.dev/packages/scan_tally): Stok sayımı için sürekli barkod okutma: tekrar ayıklama, sayım, geri bildirim, GS1
+- [scan_tally_mobile_scanner](https://pub.dev/packages/scan_tally_mobile_scanner): scan_tally için mobile_scanner kamera adaptörü
+- [turkish_kit](https://pub.dev/packages/turkish_kit): Türkçe doğrulayıcılar, tutarı yazıyla yazma, harf dönüşümü, il/ilçe, tatiller (saf Dart)
+- [turkish_kit_flutter](https://pub.dev/packages/turkish_kit_flutter): turkish_kit için Flutter bileşenleri: Türk biçimli para alanı ve girdi biçimleyicileri
+- [flutter_toastify](https://pub.dev/packages/flutter_toastify): Animasyonlu toast bildirimleri
 
 ## License / Lisans
 
