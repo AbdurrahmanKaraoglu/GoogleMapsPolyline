@@ -61,9 +61,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mode => 'Mode';
 
   @override
-  String get missingApiKey => 'DIRECTIONS_API_KEY is not set. Start the app with --dart-define.';
-
-  @override
   String get placeIstanbul => 'Istanbul';
 
   @override
@@ -80,4 +77,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get placeGalataTower => 'Galata Tower';
+
+  @override
+  String get demoTitle => 'Demo mode: sample routes';
+
+  @override
+  String get demoBody =>
+      'No DIRECTIONS_API_KEY was provided, so bundled sample polylines are decoded offline with PolylineCodec. Run with --dart-define=DIRECTIONS_API_KEY=... for live routes.';
+
+  @override
+  String get demoStatus => 'Demo';
 }

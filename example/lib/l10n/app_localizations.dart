@@ -194,12 +194,6 @@ abstract class AppLocalizations {
   /// **'Mode'**
   String get mode;
 
-  /// No description provided for @missingApiKey.
-  ///
-  /// In en, this message translates to:
-  /// **'DIRECTIONS_API_KEY is not set. Start the app with --dart-define.'**
-  String get missingApiKey;
-
   /// No description provided for @placeIstanbul.
   ///
   /// In en, this message translates to:
@@ -235,6 +229,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Galata Tower'**
   String get placeGalataTower;
+
+  /// No description provided for @demoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Demo mode: sample routes'**
+  String get demoTitle;
+
+  /// No description provided for @demoBody.
+  ///
+  /// In en, this message translates to:
+  /// **'No DIRECTIONS_API_KEY was provided, so bundled sample polylines are decoded offline with PolylineCodec. Run with --dart-define=DIRECTIONS_API_KEY=... for live routes.'**
+  String get demoBody;
+
+  /// No description provided for @demoStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Demo'**
+  String get demoStatus;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

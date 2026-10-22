@@ -1,3 +1,9 @@
+## 2.2.1
+
+* Directions API responses are decoded as UTF-8 even when the `Content-Type` header has no charset, so non-ASCII `error_message` texts (e.g. Turkish) are no longer garbled.
+* README: "Works well with" section for animated_route_marker, route_simulator and marker_crafter.
+* Example app: demo mode without `DIRECTIONS_API_KEY` (bundled sample polylines decoded offline), a map-independent route preview, travel mode and detail options disabled in demo mode.
+
 ## 2.2.0
 
 * **Language support:** new `language` parameter on `GoogleMapsPolyline` (default `en`). It is sent to the Directions API as `language` and selects the language of the package's own messages (`tr` → Turkish, anything else → English).

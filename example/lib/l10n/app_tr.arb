@@ -17,11 +17,13 @@
   "status": "Durum",
   "points": "Nokta",
   "mode": "Mod",
-  "missingApiKey": "DIRECTIONS_API_KEY tanımlı değil. Uygulamayı --dart-define ile başlatın.",
   "placeIstanbul": "İstanbul",
   "placeAnkara": "Ankara",
   "placeIzmir": "İzmir",
   "placeAntalya": "Antalya",
   "placeSultanahmet": "Sultanahmet",
-  "placeGalataTower": "Galata Kulesi"
+  "placeGalataTower": "Galata Kulesi",
+  "demoTitle": "Demo modu: örnek rotalar",
+  "demoBody": "DIRECTIONS_API_KEY verilmediği için uygulamaya eklenmiş örnek polyline'lar PolylineCodec ile çevrimdışı çözülüyor. Gerçek rotalar için --dart-define=DIRECTIONS_API_KEY=... ile çalıştırın.",
+  "demoStatus": "Demo"
 }

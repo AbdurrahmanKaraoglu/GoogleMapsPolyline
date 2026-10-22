@@ -1,6 +1,6 @@
 name: google_maps_polyline
 description: Google Directions API ile iki nokta arasında rota alır, Google kodlanmış polyline dizelerini çözer ve kodlar. Saf Dart; Flutter ve sunucu tarafında çalışır.
-version: 2.2.0
+version: 2.2.1
 homepage: https://github.com/AbdurrahmanKaraoglu/GoogleMapsPolyline
 repository: https://github.com/AbdurrahmanKaraoglu/GoogleMapsPolyline
 issue_tracker: https://github.com/AbdurrahmanKaraoglu/GoogleMapsPolyline/issues

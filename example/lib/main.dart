@@ -6,6 +6,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_maps_polyline/google_maps_polyline.dart';
 import 'package:intl/intl.dart';
 
+import 'demo_routes.dart';
 import 'l10n/app_localizations.dart';
 
 /// The Directions API key is provided at build time:
@@ -63,11 +64,14 @@ class RouteDemoApp extends StatelessWidget {
 
 /// Predefined demo routes.
 class _Preset {
-  const _Preset(this.origin, this.originName, this.destination, this.destinationName);
+  const _Preset(this.origin, this.originName, this.destination, this.destinationName, this.demoPolyline);
   final MyPointLatLng origin;
   final String Function(AppLocalizations) originName;
   final MyPointLatLng destination;
   final String Function(AppLocalizations) destinationName;
+
+  /// Sample polyline shown in demo mode (no API key).
+  final String demoPolyline;
 
   String title(AppLocalizations l) => '${originName(l)} → ${destinationName(l)}';
 }
@@ -78,18 +82,21 @@ final _presets = [
     (l) => l.placeIstanbul,
     const MyPointLatLng(39.9334, 32.8597),
     (l) => l.placeAnkara,
+    demoIstanbulAnkara,
   ),
   _Preset(
     const MyPointLatLng(38.4237, 27.1428),
     (l) => l.placeIzmir,
     const MyPointLatLng(36.8969, 30.7133),
     (l) => l.placeAntalya,
+    demoIzmirAntalya,
   ),
   _Preset(
     const MyPointLatLng(41.0054, 28.9768),
     (l) => l.placeSultanahmet,
     const MyPointLatLng(41.0256, 28.9744),
     (l) => l.placeGalataTower,
+    demoSultanahmetGalata,
   ),
 ];
 
@@ -110,6 +117,9 @@ class _RouteScreenState extends State<RouteScreen> {
   bool _loading = false;
   ResultPolyline? _result;
 
+  /// Without a Directions API key the app shows bundled sample routes.
+  bool get _demo => directionsApiKey.isEmpty;
+
   bool _started = false;
 
   @override
@@ -123,13 +133,11 @@ class _RouteScreenState extends State<RouteScreen> {
   }
 
   Future<void> _loadRoute() async {
-    if (directionsApiKey.isEmpty) {
-      setState(
-        () => _result = ResultPolyline(
-          status: ResultPolyline.statusError,
-          errorMessage: AppLocalizations.of(context).missingApiKey,
-        ),
-      );
+    if (_demo) {
+      // Decoded offline with the package's PolylineCodec; no network request.
+      final points = PolylineCodec.decode(_preset.demoPolyline);
+      setState(() => _result = ResultPolyline(status: 'OK', points: points));
+      _fitToRoute(points);
       return;
     }
     setState(() => _loading = true);
@@ -218,6 +226,7 @@ class _RouteScreenState extends State<RouteScreen> {
                     mode: _mode,
                     detailed: _detailed,
                     loading: _loading,
+                    demo: _demo,
                     onPresetChanged: (p) {
                       setState(() => _preset = p);
                       _loadRoute();
@@ -231,8 +240,9 @@ class _RouteScreenState extends State<RouteScreen> {
                       _loadRoute();
                     },
                   ),
+                  if (_demo) ...[const SizedBox(height: 12), const _DemoBanner()],
                   const Spacer(),
-                  _ResultCard(result: _result, loading: _loading, mode: _mode, onRetry: _loadRoute),
+                  _ResultCard(result: _result, loading: _loading, mode: _mode, demo: _demo, onRetry: _loadRoute),
                 ],
               ),
             ),
@@ -249,6 +259,7 @@ class _PlannerCard extends StatelessWidget {
     required this.mode,
     required this.detailed,
     required this.loading,
+    required this.demo,
     required this.onPresetChanged,
     required this.onModeChanged,
     required this.onDetailedChanged,
@@ -258,6 +269,9 @@ class _PlannerCard extends StatelessWidget {
   final MyTravelMode mode;
   final bool detailed;
   final bool loading;
+
+  /// Travel mode and detail do not apply to the bundled sample routes.
+  final bool demo;
   final ValueChanged<_Preset> onPresetChanged;
   final ValueChanged<MyTravelMode> onModeChanged;
   final ValueChanged<bool> onDetailedChanged;
@@ -327,13 +341,13 @@ class _PlannerCard extends StatelessWidget {
                   ButtonSegment(value: m, icon: Icon(_modeIcon(m)), label: Text(_modeLabel(l, m))),
               ],
               selected: {mode},
-              onSelectionChanged: loading ? null : (s) => onModeChanged(s.first),
+              onSelectionChanged: loading || demo ? null : (s) => onModeChanged(s.first),
             ),
             const SizedBox(height: 4),
             Row(
               children: [
                 Expanded(child: Text(l.detailedRoute, style: text.bodyMedium)),
-                Switch(value: detailed, onChanged: loading ? null : onDetailedChanged),
+                Switch(value: detailed, onChanged: loading || demo ? null : onDetailedChanged),
               ],
             ),
           ],
@@ -371,11 +385,18 @@ class _Stop extends StatelessWidget {
 }
 
 class _ResultCard extends StatelessWidget {
-  const _ResultCard({required this.result, required this.loading, required this.mode, required this.onRetry});
+  const _ResultCard({
+    required this.result,
+    required this.loading,
+    required this.mode,
+    required this.demo,
+    required this.onRetry,
+  });
 
   final ResultPolyline? result;
   final bool loading;
   final MyTravelMode mode;
+  final bool demo;
   final VoidCallback onRetry;
 
   @override
@@ -434,19 +455,42 @@ class _ResultCard extends StatelessWidget {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
-        child: Row(
+        padding: const EdgeInsets.fromLTRB(8, 12, 8, 14),
+        child: Column(
           children: [
-            _Metric(label: l.status, value: r.status!, icon: Icons.check_circle, color: const Color(0xFF15803D)),
-            const _Divider(),
-            _Metric(
-              label: l.points,
-              value: NumberFormat.decimalPattern(l.localeName).format(r.points.length),
-              icon: Icons.timeline,
-              color: _brandBlue,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: SizedBox(
+                height: 84,
+                width: double.infinity,
+                child: CustomPaint(painter: _RoutePreviewPainter(r.points)),
+              ),
             ),
-            const _Divider(),
-            _Metric(label: l.mode, value: _modeLabel(l, mode), icon: _modeIcon(mode), color: _brandNavy),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                _Metric(
+                  label: l.status,
+                  value: demo ? l.demoStatus : r.status!,
+                  icon: demo ? Icons.science_outlined : Icons.check_circle,
+                  color: demo ? const Color(0xFFB45309) : const Color(0xFF15803D),
+                ),
+                const _Divider(),
+                _Metric(
+                  label: l.points,
+                  value: NumberFormat.decimalPattern(l.localeName).format(r.points.length),
+                  icon: Icons.timeline,
+                  color: _brandBlue,
+                ),
+                const _Divider(),
+                _Metric(
+                  label: l.mode,
+                  value: demo ? '—' : _modeLabel(l, mode),
+                  icon: _modeIcon(mode),
+                  color: _brandNavy,
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -498,3 +542,103 @@ IconData _modeIcon(MyTravelMode m) => switch (m) {
   MyTravelMode.bicycling => Icons.pedal_bike,
   MyTravelMode.transit => Icons.directions_transit,
 };
+
+/// Shown when the app runs without a Directions API key.
+class _DemoBanner extends StatelessWidget {
+  const _DemoBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    final l = AppLocalizations.of(context);
+    return Card(
+      color: const Color(0xFFFFFBEB),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: Color(0xFFFDE68A)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.info_outline, color: Color(0xFFB45309), size: 22),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l.demoTitle,
+                    style: text.labelLarge?.copyWith(color: const Color(0xFF92400E), fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(l.demoBody, style: text.bodySmall?.copyWith(color: const Color(0xFF78350F))),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Draws the route shape without a map, so it is visible even when the map
+/// has no Maps SDK key.
+class _RoutePreviewPainter extends CustomPainter {
+  _RoutePreviewPainter(this.points);
+
+  final List<MyPointLatLng> points;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final background = Paint()..color = const Color(0xFFF1F5F9);
+    canvas.drawRRect(RRect.fromRectAndRadius(Offset.zero & size, const Radius.circular(12)), background);
+    if (points.length < 2) return;
+
+    // Equirectangular projection around the route's mean latitude.
+    final meanLat = points.map((p) => p.latitude).reduce((a, b) => a + b) / points.length;
+    final kx = math.cos(meanLat * math.pi / 180);
+    var minX = double.infinity, maxX = -double.infinity, minY = double.infinity, maxY = -double.infinity;
+    for (final p in points) {
+      minX = math.min(minX, p.longitude * kx);
+      maxX = math.max(maxX, p.longitude * kx);
+      minY = math.min(minY, p.latitude);
+      maxY = math.max(maxY, p.latitude);
+    }
+    const pad = 14.0;
+    final w = size.width - 2 * pad, h = size.height - 2 * pad;
+    final scale = math.min(w / math.max(maxX - minX, 1e-9), h / math.max(maxY - minY, 1e-9));
+    final dx = pad + (w - (maxX - minX) * scale) / 2, dy = pad + (h - (maxY - minY) * scale) / 2;
+    Offset project(MyPointLatLng p) => Offset(dx + (p.longitude * kx - minX) * scale, dy + (maxY - p.latitude) * scale);
+
+    final path = Path()..moveTo(project(points.first).dx, project(points.first).dy);
+    for (final p in points.skip(1)) {
+      final o = project(p);
+      path.lineTo(o.dx, o.dy);
+    }
+    final stroke = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    canvas.drawPath(
+      path,
+      stroke
+        ..color = _brandNavy
+        ..strokeWidth = 6,
+    );
+    canvas.drawPath(
+      path,
+      stroke
+        ..color = _brandBlue
+        ..strokeWidth = 3,
+    );
+    canvas.drawCircle(project(points.first), 6, Paint()..color = Colors.white);
+    canvas.drawCircle(project(points.first), 4, Paint()..color = _brandBlue);
+    canvas.drawCircle(project(points.last), 6, Paint()..color = const Color(0xFFDC2626));
+  }
+
+  @override
+  bool shouldRepaint(_RoutePreviewPainter old) => !identical(old.points, points);
+}

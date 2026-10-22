@@ -21,8 +21,13 @@ flutter run --dart-define=DIRECTIONS_API_KEY=YOUR_KEY
 
 The key needs access to both **Directions API** and **Maps SDK for Android/iOS**.
 
+Without `DIRECTIONS_API_KEY` the app opens in **demo mode**: bundled sample polylines (approximate, not Directions API
+output) are decoded offline with `PolylineCodec` and drawn in a route preview card, so the UI can be tried without
+any key. Without a Maps SDK key the map itself stays blank, but the preview still shows the route.
+
 ---
 
 İstanbul–Ankara gibi hazır rotaları Directions API'den alıp haritada çizer; uygulama cihaz diline göre Türkçe veya
 İngilizce açılır. Maps SDK anahtarını `android/local.properties` içine `MAPS_API_KEY=...` olarak yazın,
-Directions anahtarını `--dart-define=DIRECTIONS_API_KEY=...` ile verin.
+Directions anahtarını `--dart-define=DIRECTIONS_API_KEY=...` ile verin. Anahtar verilmezse uygulama demo modunda açılır ve örnek rotaları
+çevrimdışı çözüp önizleme kartında çizer.

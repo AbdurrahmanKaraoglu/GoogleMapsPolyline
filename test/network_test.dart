@@ -128,6 +128,17 @@ void main() {
     expect(result.status, 'INVALID_REQUEST');
   });
 
+  test('charset belirtilmeyen yanıt UTF-8 olarak okunur', () async {
+    final api = polylineWith(
+      (_) async => http.Response.bytes(
+        utf8.encode(jsonEncode({'status': 'REQUEST_DENIED', 'error_message': 'İstek reddedildi: şifre ğüçö'})),
+        200,
+      ),
+    );
+    final result = await api.getRouteBetweenCoordinates(_apiKey, _origin, _destination);
+    expect(result.errorMessage, 'İstek reddedildi: şifre ğüçö');
+  });
+
   test('bozuk JSON hata olarak döner', () async {
     final api = polylineWith((_) async => http.Response('{bozuk', 200));
     final result = await api.getRouteBetweenCoordinates(_apiKey, _origin, _destination);

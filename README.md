@@ -13,7 +13,7 @@ on the web; for route requests see [Flutter web and CORS](#flutter-web-and-cors)
 
 ```yaml
 dependencies:
-  google_maps_polyline: ^2.2.0
+  google_maps_polyline: ^2.2.1
 ```
 
 ## Fetching a route
@@ -85,6 +85,26 @@ PolylineCodec.decode(encoded6, precision: 6);
 
 Invalid or truncated strings throw `FormatException`.
 
+## Works well with
+
+These packages by the same author take plain coordinates, so they plug into this one without depending on it:
+
+- [animated_route_marker](https://pub.dev/packages/animated_route_marker): moves a `google_maps_flutter` marker
+  along a route at a real speed, with smooth heading, playback controls and camera follow. Give it the route as
+  `List<LatLng>`:
+
+  ```dart
+  final result = await GoogleMapsPolyline().getRouteBetweenCoordinates(apiKey, origin, destination);
+  final route = [for (final p in result.points) LatLng(p.latitude, p.longitude)];
+  courier.setRoute(route, speed: 12, autoPlay: true); // AnimatedRouteMarkerController
+  ```
+
+- [route_simulator](https://pub.dev/packages/route_simulator): produces a realistic fake GPS stream along a route,
+  for testing and demos. It reads encoded polylines directly, so you can pass the encoded string (or
+  `PolylineCodec.encode(result.points)`) to `SimRoute.fromEncodedPolyline`.
+- [marker_crafter](https://pub.dev/packages/marker_crafter): canvas-drawn marker icons for the start, end or a
+  moving vehicle.
+
 ## Flutter web and CORS
 
 Google's Directions web service does not allow CORS requests from browsers, so on Flutter web
@@ -116,7 +136,8 @@ API's `polyline.encodedPolyline` uses the same format and can be decoded with `P
 - The package no longer depends on Flutter.
 - Since 2.2.0 the package's messages are in English by default; pass `language: 'tr'` to keep Turkish messages.
 
-See [`example/`](example) for a complete Flutter app (English and Turkish).
+See [`example/`](example) for a complete Flutter app (English and Turkish). Without a `DIRECTIONS_API_KEY` it runs
+in demo mode: bundled sample polylines are decoded offline with `PolylineCodec` and drawn in a route preview.
 
 ---
 
@@ -139,6 +160,13 @@ Saf Dart'tır; Flutter (Android, iOS, masaüstü) ve sunucu tarafında çalış�
 - **Anahtar güvenliği:** Anahtarı yalnızca Directions API ile sınırlayın ve kota koyun ya da isteği kendi
   sunucunuzdan yapın.
 - Directions API Google tarafından **Legacy** olarak işaretlendi; yeni projeler için Routes API önerilir.
+- **Birlikte kullanım:** [animated_route_marker](https://pub.dev/packages/animated_route_marker) rotayı
+  `List<LatLng>` olarak alıp marker'ı üzerinde gerçek hızla hareket ettirir (`result.points`'i `LatLng`'ye
+  çevirmeniz yeterli); [route_simulator](https://pub.dev/packages/route_simulator) kodlanmış polyline'dan sahte GPS
+  akışı üretir (`SimRoute.fromEncodedPolyline`); [marker_crafter](https://pub.dev/packages/marker_crafter) marker
+  ikonları çizer.
+- **Örnek uygulama:** `DIRECTIONS_API_KEY` verilmezse demo modunda açılır; örnek polyline'lar çevrimdışı çözülüp
+  rota önizlemesinde çizilir.
 
 ## License / Lisans
 

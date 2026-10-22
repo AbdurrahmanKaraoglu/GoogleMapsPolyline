@@ -72,7 +72,7 @@ class MyNetworkUtil {
 
     final Map<String, dynamic> body;
     try {
-      final decoded = json.decode(response.body);
+      final decoded = json.decode(utf8.decode(response.bodyBytes, allowMalformed: true));
       if (decoded is! Map<String, dynamic>) throw const FormatException();
       body = decoded;
     } on FormatException {

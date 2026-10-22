@@ -17,11 +17,13 @@
   "status": "Status",
   "points": "Points",
   "mode": "Mode",
-  "missingApiKey": "DIRECTIONS_API_KEY is not set. Start the app with --dart-define.",
   "placeIstanbul": "Istanbul",
   "placeAnkara": "Ankara",
   "placeIzmir": "Izmir",
   "placeAntalya": "Antalya",
   "placeSultanahmet": "Sultanahmet",
-  "placeGalataTower": "Galata Tower"
+  "placeGalataTower": "Galata Tower",
+  "demoTitle": "Demo mode: sample routes",
+  "demoBody": "No DIRECTIONS_API_KEY was provided, so bundled sample polylines are decoded offline with PolylineCodec. Run with --dart-define=DIRECTIONS_API_KEY=... for live routes.",
+  "demoStatus": "Demo"
 }

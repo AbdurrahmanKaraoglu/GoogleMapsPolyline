@@ -61,9 +61,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get mode => 'Mod';
 
   @override
-  String get missingApiKey => 'DIRECTIONS_API_KEY tanımlı değil. Uygulamayı --dart-define ile başlatın.';
-
-  @override
   String get placeIstanbul => 'İstanbul';
 
   @override
@@ -80,4 +77,14 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get placeGalataTower => 'Galata Kulesi';
+
+  @override
+  String get demoTitle => 'Demo modu: örnek rotalar';
+
+  @override
+  String get demoBody =>
+      'DIRECTIONS_API_KEY verilmediği için uygulamaya eklenmiş örnek polyline\'lar PolylineCodec ile çevrimdışı çözülüyor. Gerçek rotalar için --dart-define=DIRECTIONS_API_KEY=... ile çalıştırın.';
+
+  @override
+  String get demoStatus => 'Demo';
 }
