@@ -1,3 +1,7 @@
+## 2.2.3
+
+* Example: Android build updated for Flutter 3.50 (Android Gradle Plugin 9.3.1, Gradle 9.5.0, Kotlin 2.4.20); verified with Flutter 3.47.2 and 3.50.0. No library changes. / Örnek: Android derlemesi Flutter 3.50 için güncellendi (Android Gradle Plugin 9.3.1, Gradle 9.5.0, Kotlin 2.4.20); Flutter 3.47.2 ve 3.50.0 ile doğrulandı. Kütüphanede değişiklik yok.
+
 ## 2.2.2
 
 * DOCS: README lists the publisher's other packages. / README'ye yayıncının diğer paketlerinin listesi eklendi.

@@ -13,7 +13,7 @@ on the web; for route requests see [Flutter web and CORS](#flutter-web-and-cors)
 
 ```yaml
 dependencies:
-  google_maps_polyline: ^2.2.2
+  google_maps_polyline: ^2.2.3
 ```
 
 ## Fetching a route
